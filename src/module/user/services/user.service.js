@@ -4,6 +4,7 @@ import * as dbService from '../../../../DB/db.service.js'
 import { userModel } from "../../../../DB/model/User.model.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { compareHash, generateHash } from "../../../utils/security/hash.security.js";
+import cloud from '../../../utils/multer/cloudinary.js';
 
 
 
@@ -37,11 +38,9 @@ export const share = asyncHandler(async (req, res, next) => {
             populate: [{ path: "viewers", select: "userId" }]
         })
         //check if the login account in the block list of profileId account
-        for(let i = 0; i < user.blockAccountsList.length; i++)
-        {
-            if(user.blockAccountsList[i] === req.user.email)
-            {
-                return next(new Error("You are blocked", {cause:400}))
+        for (let i = 0; i < user.blockAccountsList.length; i++) {
+            if (user.blockAccountsList[i] === req.user.email) {
+                return next(new Error("You are blocked", { cause: 400 }))
             }
         }
         for (let i = 0; i < user.viewers.length; i++) {
@@ -128,43 +127,103 @@ export const replaceEmail = asyncHandler(async (req, res, next) => {
     if (!compareHash({ plainText: newEmailCode, hashValue: req.user.updateEmailOtp })) {
         return next(new Error("the code of the new email is incorrect", { cause: 400 }))
     }
-    await dbService.updateOne({model:userModel, filter:{_id:req.user._id}, 
-        data:{
-            email:req.user.tempEmail,
-            changeCredentialsTime:Date.now(), 
-            $unset:{
-                tempEmail:0, 
-                emailOtp:0, 
-                updateEmailOtp:0
-            }}})
+    await dbService.updateOne({
+        model: userModel, filter: { _id: req.user._id },
+        data: {
+            email: req.user.tempEmail,
+            changeCredentialsTime: Date.now(),
+            $unset: {
+                tempEmail: 0,
+                emailOtp: 0,
+                updateEmailOtp: 0
+            }
+        }
+    })
     return successResponse({ res })
 })
 
 export const TwoStepVerification = asyncHandler(async (req, res, next) => {
     //send email to the user with otp
-    emailEvent.emit("RequestTwoStep", {email:req.user.email})
+    emailEvent.emit("RequestTwoStep", { email: req.user.email })
 
     return successResponse({ res })
 })
 
 export const TwoStepConfirm = asyncHandler(async (req, res, next) => {
-    
-    const {otp} = req.body
+
+    const { otp } = req.body
     //check if otp is correct
-    if(!compareHash({plainText:otp, hashValue:req.user.emailOtp}))
-    {
-        return next(new Error("In-valid Otp", {cause:400}))
+    if (!compareHash({ plainText: otp, hashValue: req.user.emailOtp })) {
+        return next(new Error("In-valid Otp", { cause: 400 }))
     }
     //make two step verification true in database
-    await dbService.updateOne({model:userModel, filter:{email:req.user.email}, data:{twoStepVerification:true}})
+    await dbService.updateOne({ model: userModel, filter: { email: req.user.email }, data: { twoStepVerification: true } })
 
-    return successResponse({ res, message:"tow step verification enabled" })
+    return successResponse({ res, message: "tow step verification enabled" })
 })
 
 export const blockUser = asyncHandler(async (req, res, next) => {
-    
-    const {email} = req.body
-    await dbService.updateOne({model:userModel, filter:{email: req.user.email}, data:{$push :{blockAccountsList:email}}})
+
+    const { email } = req.body
+    await dbService.updateOne({ model: userModel, filter: { email: req.user.email }, data: { $push: { blockAccountsList: email } } })
     return successResponse({ res })
+})
+
+export const updateImage = asyncHandler(async (req, res, next) => {
+
+    const { secure_url, public_id } = await cloud.uploader.upload(req.file.path, { folder: `user/${req.user._id}` })
+
+    const user = await dbService.findByIdAndUpdate({
+        model: userModel,
+        id: req.user._id,
+        data: {
+            image: { secure_url, public_id }
+        },
+        options: {
+            new: true
+        }
+    })
+    if (user.image?.public_id) {
+        await cloud.uploader.destroy(user.image.public_id)
+    }
+    return successResponse({ res, data: { file: req.file, user } })
+})
+
+
+export const coverImage = asyncHandler(async (req, res, next) => {
+    const images = []
+    for (const file of req.files) {
+
+        const { secure_url, public_id } = await cloud.uploader.upload(file.path, { folder: `user/${req.user._id}` })
+        images.push({ secure_url, public_id })
+    }
+    const user = await dbService.findByIdAndUpdate({
+        model: userModel,
+        id: req.user._id,
+        data: {
+            //coverImages: req.files.map(file => file.finalPath)
+            converImages: images
+        },
+        options: {
+            new: true
+        }
+    })
+    return successResponse({ res, data: { file: req.files, user } })
+})
+
+
+export const identity = asyncHandler(async (req, res, next) => {
+    /*
+    const user = await dbService.findByIdAndUpdate({model:userModel,
+                                        id:req.user._id,
+                                        data:{
+                                            coverImages: req.files.image.map(file => file.image.finalPath),
+                                            documents: req.files.document.map(file => file.document.finalPath)
+                                        },
+                                        options:{
+                                            new:true
+                                        }
+    })*/
+    return successResponse({ res, data: { file: req.files } })
 })
 

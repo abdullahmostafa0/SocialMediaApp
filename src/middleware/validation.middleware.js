@@ -21,7 +21,11 @@ export const generalFields ={
 
 export const validation = (schema)=>{
     return (req, res, next)=>{
-        const inputData = {...req.body, ...req.params, ...req.query}    
+        let inputData = {...req.body, ...req.params, ...req.query} 
+        if (req.file || req.files?.length)
+        {
+            inputData = {...req.file, ...req.files}
+        }
         const validationResult = schema.validate(inputData, {abortEarly: false})
         if(validationResult.error)
         {

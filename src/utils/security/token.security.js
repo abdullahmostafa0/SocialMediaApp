@@ -6,7 +6,7 @@ export const tokenTypes = {
     access:'access',
     refresh:'refresh'
 }
-export const decodeToken = async ({ authorization = "", tokenType = tokenTypes.access } = {}) => {
+export const decodeToken = async ({ authorization = "", tokenType = tokenTypes.access, next } = {}) => {
     
     const [barrer, token] = authorization?.split(" ") || []
 
