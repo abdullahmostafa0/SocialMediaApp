@@ -10,17 +10,17 @@ export const createPost = asyncHandler(async (req, res, next) => {
     const { bio } = req.body
     if (req.files) {
 
-        const images = []
+        const attachments = []
         for (const file of req.files) {
 
             const { secure_url, public_id } = await cloud.uploader.upload(file.path, { folder: "post" })
-            images.push({ secure_url, public_id })
+            attachments.push({ secure_url, public_id })
         }
-        req.body.images = images
+        req.body.attachments = attachments
 
     }
     else {
-        req.body.images = []
+        req.body.attachments = []
     }
     console.log(req.body.images)
     console.log(req.files)

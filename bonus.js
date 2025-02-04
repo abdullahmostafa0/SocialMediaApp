@@ -1,7 +1,8 @@
-var lengthOfLastWord = function(s) {
-
-    const arrWord = s.trim().split(" "); 
-    const lastWord = arrWord[arrWord.length - 1];
-    return lastWord.length;  
+/**
+ * @param {number} n
+ * @return {boolean}
+ */
+var canWinNim = function(n) {
     
+    return  n % 4 != 0
 };
