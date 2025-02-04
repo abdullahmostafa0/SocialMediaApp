@@ -38,5 +38,11 @@ router.patch('/undo/:postId',
     validation(validators.undoPost),
     postServices.undoPost
 )
+router.patch('/restore/:postId',
+    authentication(),
+    authorization(endPoint.createPost),
+    validation(validators.restorePost),
+    postServices.restorePost
+)
 
 export default router

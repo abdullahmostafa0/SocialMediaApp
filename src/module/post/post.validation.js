@@ -28,3 +28,8 @@ export const undoPost = Joi.object().keys({
     postId: generalFields.id.required()
     
 }).required()
+
+export const restorePost = Joi.object().keys({
+    postId: generalFields.id.required()
+    
+}).required()
