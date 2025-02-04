@@ -45,4 +45,12 @@ router.patch('/restore/:postId',
     postServices.restorePost
 )
 
+router.patch('/like/:postId',
+    authentication(),
+    authorization(endPoint.createPost),
+    validation(validators.likePost),
+    postServices.likePost
+)
+
+
 export default router

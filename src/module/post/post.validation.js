@@ -33,3 +33,9 @@ export const restorePost = Joi.object().keys({
     postId: generalFields.id.required()
     
 }).required()
+
+export const likePost = Joi.object().keys({
+    postId: generalFields.id.required()
+    
+}).required()
+

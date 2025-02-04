@@ -159,3 +159,27 @@ export const restorePost = asyncHandler(async (req, res, next) => {
     return post ? successResponse({ res, data: { post }, status: 200 })
         : next(new Error("in valid post id", { cause: 404 }))
 })
+
+
+export const likePost = asyncHandler(async (req, res, next) => {
+
+    const {action} = req.query
+    const data = action?.toLowerCase() === 'like' ? {$addToSet:{likes:req.user._id}} : {$pull:{likes:req.user._id}}
+    
+    const post = await dbService.findOneAndUpdate({
+        model: postModel,
+        filter: {
+            _id: req.params.postId,
+            isDeleted: {
+                $exists: false
+            }
+        },
+        data,
+        options: {
+            new: true
+        }
+    })
+    return post ? successResponse({ res, data: { post }, status: 200 })
+        : next(new Error("in valid post id", { cause: 404 }))
+})
+
