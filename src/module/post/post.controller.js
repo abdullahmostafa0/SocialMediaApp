@@ -9,12 +9,34 @@ import { validation } from "../../middleware/validation.middleware.js";
 import { fileValidationTypes } from "../../utils/multer/local.multer.js";
 
 
-router.post('/',
+router.post('/create',
     authentication(),
     authorization(endPoint.createPost),
     uploadCloudFile(fileValidationTypes.image).array('image', 2),
     validation(validators.createPost),
     postServices.createPost
+)
+
+router.patch('/update/:postId',
+    authentication(),
+    authorization(endPoint.createPost),
+    uploadCloudFile(fileValidationTypes.image).array('image', 2),
+    validation(validators.updatePost),
+    postServices.updatePost
+)
+
+router.delete('/freeze/:postId',
+    authentication(),
+    authorization(endPoint.freezePost),
+    validation(validators.freezePost),
+    postServices.freezePost
+)
+
+router.patch('/undo/:postId',
+    authentication(),
+    authorization(endPoint.createPost),
+    validation(validators.undoPost),
+    postServices.undoPost
 )
 
 export default router

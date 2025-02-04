@@ -18,7 +18,7 @@ const postSchema = new Schema({
     share: [{ type: Types.ObjectId, ref: "User" }],
     userId: { type: Types.ObjectId, ref: "User", required: true },
     deletedBy: { type: Types.ObjectId, ref: "User"},
-    isDeleted:Boolean,
+    isDeleted:Date,
 },
     {
         timestamps: true
