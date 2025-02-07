@@ -3,8 +3,8 @@ import { generalFields } from "../../middleware/validation.middleware.js";
 
 
 
-export const createPost = Joi.object().keys({
-
+export const createComment = Joi.object().keys({
+    postId: generalFields.id.required(),
     content: Joi.string().min(2).max(20000).trim(),
     file:Joi.object().options({allowUnknown:true})
     

@@ -7,9 +7,11 @@ import { uploadCloudFile } from "../../utils/multer/cloud.multer.js";
 import * as validators from './post.validation.js'
 import { validation } from "../../middleware/validation.middleware.js";
 import { fileValidationTypes } from "../../utils/multer/local.multer.js";
+import commentController from '../comment/comment.controller.js'
 
+router.use('/:postId/comment', commentController)
 
-router.post('/create',
+router.post('/create-public',
     authentication(),
     authorization(endPoint.createPost),
     uploadCloudFile(fileValidationTypes.image).array('image', 2),
@@ -45,11 +47,34 @@ router.patch('/restore/:postId',
     postServices.restorePost
 )
 
+router.patch('/archive/:postId',
+    authentication(),
+    authorization(endPoint.createPost),
+    validation(validators.archivePost),
+    postServices.archivePost
+)
+
 router.patch('/like/:postId',
     authentication(),
     authorization(endPoint.createPost),
     validation(validators.likePost),
     postServices.likePost
+)
+
+router.get('/public-posts',
+    postServices.getPublicPosts
+)
+
+router.get('/friends-posts',
+    authentication(),
+    authorization(endPoint.createPost),
+    postServices.getFriendsPosts
+)
+
+router.get('/specific-posts',
+    authentication(),
+    authorization(endPoint.createPost),
+    postServices.getSpecificPosts
 )
 
 

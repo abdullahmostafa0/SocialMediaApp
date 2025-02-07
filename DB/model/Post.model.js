@@ -1,6 +1,10 @@
 import mongoose, { Schema, Types, model } from "mongoose"
 
-
+export const privacyTypes ={
+    public:"public",
+    userFriends:"friends",
+    specific:"specific"
+}
 const postSchema = new Schema({
     content: {
         type: String,
@@ -17,12 +21,20 @@ const postSchema = new Schema({
     tags: [{ type: Types.ObjectId, ref: "User" }],
     share: [{ type: Types.ObjectId, ref: "User" }],
     userId: { type: Types.ObjectId, ref: "User", required: true },
-    deletedBy: { type: Types.ObjectId, ref: "User"},
-    isDeleted:Date,
+    deletedBy: { type: Types.ObjectId, ref: "User" },
+    isDeleted: Date,
+    archive: Boolean,
+    privacy:{
+    type: String,
+    enum: Object.values(privacyTypes),
+    default: privacyTypes.public
+    },
+    userFriends:[String],
+    specific:[String]
 },
-    {
-        timestamps: true
-    })
+{
+    timestamps: true
+})
 
 export const postModel = mongoose.models.Post || model("Post", postSchema)
 

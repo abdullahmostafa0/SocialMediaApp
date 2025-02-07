@@ -1,6 +1,6 @@
 import { asyncHandler } from "../../../utils/response/error.response.js";
 import * as dbService from "../../../../DB/db.service.js"
-import { postModel } from "../../../../DB/model/Post.model.js";
+import { postModel, privacyTypes } from "../../../../DB/model/Post.model.js";
 import cloud from "../../../utils/multer/cloudinary.js"
 import { successResponse } from "../../../utils/response/success.response.js";
 import { roleTypes } from "../../../../DB/model/User.model.js";
@@ -23,17 +23,78 @@ export const createPost = asyncHandler(async (req, res, next) => {
     else {
         req.body.attachments = []
     }
-    console.log(req.body.images)
-    console.log(req.files)
-    console.log({ ...req.body })
+    
     const post = await dbService.create({
         model: postModel, data: {
             ...req.body,
-            userId: req.user._id
+            userId: req.user._id,
+            privacy: privacyTypes.public
         }
     })
     return successResponse({ res, data: { post }, status: 201 })
 })
+
+export const getPublicPosts = asyncHandler(async (req, res, next) => {
+
+    
+    const populateList = [
+        {path:"userId", select:'username image'},
+        {path:"likes", select:'username image'},
+        {path:"share", select:'username image'},
+        {path:"tags", select:'username image'},
+    ]
+    const posts = await dbService.findAll({
+        model: postModel, filter: {
+            isDeleted:{$exists : false},
+            archive:{$exists : false},
+            privacy:privacyTypes.public
+        },
+        populate:populateList
+    })
+    return successResponse({ res, data: { posts }, status: 201 })
+})
+export const getFriendsPosts = asyncHandler(async (req, res, next) => {
+
+    
+    const populateList = [
+        {path:"userId", select:'username image'},
+        {path:"likes", select:'username image'},
+        {path:"share", select:'username image'},
+        {path:"tags", select:'username image'},
+    ]
+
+    const posts = await dbService.findAll({
+        model: postModel, filter: {
+            isDeleted:{$exists : false},
+            archive:{$exists : false},
+            //privacy:privacyTypes.friends,
+            userFriends : (req.user._id)
+        },
+        populate:populateList
+    })
+    return successResponse({ res, data: { posts }, status: 201 })
+})
+export const getSpecificPosts = asyncHandler(async (req, res, next) => {
+
+    
+    const populateList = [
+        {path:"userId", select:'username image'},
+        {path:"likes", select:'username image'},
+        {path:"share", select:'username image'},
+        {path:"tags", select:'username image'},
+    ]
+    const posts = await dbService.findAll({
+        model: postModel, filter: {
+            isDeleted:{$exists : false},
+            archive:{$exists : false},
+            //privacy:privacyTypes.specific,
+            specific : req.user._id
+        },
+        populate:populateList
+    })
+    return successResponse({ res, data: { posts }, status: 201 })
+})
+
 
 export const updatePost = asyncHandler(async (req, res, next) => {
 
@@ -172,9 +233,50 @@ export const likePost = asyncHandler(async (req, res, next) => {
             _id: req.params.postId,
             isDeleted: {
                 $exists: false
+            },
+            archive: {
+                $exists: false
             }
         },
         data,
+        options: {
+            new: true
+        }
+    })
+    return post ? successResponse({ res, data: { post }, status: 200 })
+        : next(new Error("in valid post id", { cause: 404 }))
+})
+
+export const archivePost = asyncHandler(async (req, res, next) => {
+
+    let post = await dbService.findOne({
+        model: postModel,
+        filter: {
+            _id: req.params.postId,
+            isDeleted: {
+                $exists: false
+            },
+            userId: req.user._id
+        }
+    })
+    let timeNow = Date.now()
+    if((timeNow - post.createdAt) <= 86400000)
+    {
+        return next(new Error("can't archive post, try again after 24 hour of its creation", {cause:400}))
+    }
+
+    post = await dbService.findOneAndUpdate({
+        model: postModel,
+        filter: {
+            _id: req.params.postId,
+            isDeleted: {
+                $exists: false
+            },
+            userId: req.user._id
+        },
+        data: {
+            archive:true
+        },
         options: {
             new: true
         }
