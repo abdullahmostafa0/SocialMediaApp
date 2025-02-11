@@ -6,14 +6,14 @@ import { generalFields } from "../../middleware/validation.middleware.js";
 export const createPost = Joi.object().keys({
 
     content: Joi.string().min(2).max(20000).trim(),
-    file:Joi.object().options({allowUnknown:true})
+    file:Joi.array().items(generalFields.file).max(2)
     
 }).or('content', 'file')
 
 export const updatePost = Joi.object().keys({
 
     content: Joi.string().min(2).max(20000).trim(),
-    file:Joi.object().options({allowUnknown:true}),
+    file:Joi.array().items(generalFields.file).max(2),
     postId: generalFields.id.required()
     
 }).or('content', 'file')

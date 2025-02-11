@@ -4,6 +4,7 @@ import { postModel, privacyTypes } from "../../../../DB/model/Post.model.js";
 import cloud from "../../../utils/multer/cloudinary.js"
 import { successResponse } from "../../../utils/response/success.response.js";
 import { roleTypes } from "../../../../DB/model/User.model.js";
+import { commentModel } from "../../../../DB/model/Comment.model.js";
 
 
 export const createPost = asyncHandler(async (req, res, next) => {
@@ -23,7 +24,7 @@ export const createPost = asyncHandler(async (req, res, next) => {
     else {
         req.body.attachments = []
     }
-    
+
     const post = await dbService.create({
         model: postModel, data: {
             ...req.body,
@@ -36,61 +37,104 @@ export const createPost = asyncHandler(async (req, res, next) => {
 
 export const getPublicPosts = asyncHandler(async (req, res, next) => {
 
-    
+
     const populateList = [
-        {path:"userId", select:'username image'},
-        {path:"likes", select:'username image'},
-        {path:"share", select:'username image'},
-        {path:"tags", select:'username image'},
+        { path: "userId", select: 'username image' },
+        {
+            path: "comments",
+            match: { commentId: { $exists: false } },
+            populate: [{
+                path: "reply",
+                match: { commentId: { $exists: false } },
+            }]
+        },
+        { path: "likes", select: 'username image' },
+        { path: "share", select: 'username image' },
+        { path: "tags", select: 'username image' },
     ]
+
     const posts = await dbService.findAll({
         model: postModel, filter: {
-            isDeleted:{$exists : false},
-            archive:{$exists : false},
-            privacy:privacyTypes.public
+            isDeleted: { $exists: false },
+            archive: { $exists: false },
+            privacy: privacyTypes.public
         },
-        populate:populateList
+        populate: populateList
     })
-    return successResponse({ res, data: { posts }, status: 201 })
+    //find post with there comments
+    /*for (const post of posts) {
+
+        const comments = await dbService.findAll({
+            model: commentModel,
+            filter: {
+                postId:post._id,
+                isDeleted:{$exists: false}
+            }
+        })
+        resaults.push({post, comments})
+
+    }*/
+    /*
+        const resaults = []
+        const cursor = postModel.find({
+            isDeleted: { $exists: false },
+            archive: { $exists: false },
+            privacy: privacyTypes.public
+        }).cursor()
+    
+        for (let post = await cursor.next(); post != null; post = await cursor.next()) {
+            const comments = await dbService.findAll({
+                model: commentModel,
+                filter: {
+                    postId: post._id,
+                    isDeleted: { $exists: false }
+                }
+            })
+            resaults.push({ post, comments })*/
+
+
+    return successResponse({ res, data: { posts }, status: 200 })
+
 })
+
 export const getFriendsPosts = asyncHandler(async (req, res, next) => {
 
-    
+
     const populateList = [
-        {path:"userId", select:'username image'},
-        {path:"likes", select:'username image'},
-        {path:"share", select:'username image'},
-        {path:"tags", select:'username image'},
+        { path: "userId", select: 'username image' },
+        { path: "likes", select: 'username image' },
+        { path: "share", select: 'username image' },
+        { path: "tags", select: 'username image' },
     ]
 
     const posts = await dbService.findAll({
         model: postModel, filter: {
-            isDeleted:{$exists : false},
-            archive:{$exists : false},
+            isDeleted: { $exists: false },
+            archive: { $exists: false },
             //privacy:privacyTypes.friends,
-            userFriends : (req.user._id)
+            userFriends: (req.user._id)
         },
-        populate:populateList
+        populate: populateList
     })
     return successResponse({ res, data: { posts }, status: 201 })
 })
 export const getSpecificPosts = asyncHandler(async (req, res, next) => {
 
-    
+
     const populateList = [
-        {path:"userId", select:'username image'},
-        {path:"likes", select:'username image'},
-        {path:"share", select:'username image'},
-        {path:"tags", select:'username image'},
+        { path: "userId", select: 'username image' },
+        { path: "likes", select: 'username image' },
+        { path: "share", select: 'username image' },
+        { path: "tags", select: 'username image' },
     ]
     const posts = await dbService.findAll({
         model: postModel, filter: {
-            isDeleted:{$exists : false},
-            archive:{$exists : false},
+            isDeleted: { $exists: false },
+            archive: { $exists: false },
             //privacy:privacyTypes.specific,
-            specific : req.user._id
+            specific: req.user._id
         },
-        populate:populateList
+        populate: populateList
     })
     return successResponse({ res, data: { posts }, status: 201 })
 })
@@ -208,8 +252,8 @@ export const restorePost = asyncHandler(async (req, res, next) => {
         },
         data: {
             $unset: {
-                isDeleted:"",
-                deletedBy:""
+                isDeleted: "",
+                deletedBy: ""
             }
 
         },
@@ -224,9 +268,9 @@ export const restorePost = asyncHandler(async (req, res, next) => {
 
 export const likePost = asyncHandler(async (req, res, next) => {
 
-    const {action} = req.query
-    const data = action?.toLowerCase() === 'like' ? {$addToSet:{likes:req.user._id}} : {$pull:{likes:req.user._id}}
-    
+    const { action } = req.query
+    const data = action?.toLowerCase() === 'like' ? { $addToSet: { likes: req.user._id } } : { $pull: { likes: req.user._id } }
+
     const post = await dbService.findOneAndUpdate({
         model: postModel,
         filter: {
@@ -260,9 +304,8 @@ export const archivePost = asyncHandler(async (req, res, next) => {
         }
     })
     let timeNow = Date.now()
-    if((timeNow - post.createdAt) <= 86400000)
-    {
-        return next(new Error("can't archive post, try again after 24 hour of its creation", {cause:400}))
+    if ((timeNow - post.createdAt) <= 86400000) {
+        return next(new Error("can't archive post, try again after 24 hour of its creation", { cause: 400 }))
     }
 
     post = await dbService.findOneAndUpdate({
@@ -275,7 +318,7 @@ export const archivePost = asyncHandler(async (req, res, next) => {
             userId: req.user._id
         },
         data: {
-            archive:true
+            archive: true
         },
         options: {
             new: true

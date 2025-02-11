@@ -4,8 +4,8 @@ import { Types } from "mongoose"
 const validateObjectId = (value, helper) => {
     return Types.ObjectId.isValid(value) ? true : helper.message("In-valied ObjectId")
 }
-export const fileObject = {
-    fieldname: Joi.string(),
+const fileObject = {
+    fieldname: Joi.string().valid("attachments"),
     originalname: Joi.string(),
     encoding: Joi.string(),
     mimetype: Joi.string(),
@@ -24,8 +24,9 @@ export const generalFields = {
     gender: Joi.string().valid(genderTypes.male, genderTypes.female),
     id: Joi.string().custom(validateObjectId),
     code: Joi.string().pattern(new RegExp(/^[0-9]{1,4}$/)),
-    DOB: Joi.date().less("now")
-
+    DOB: Joi.date().less("now"),
+    fileObject,
+    file:Joi.object(fileObject)
 }
 
 export const validation = (schema) => {
@@ -33,7 +34,7 @@ export const validation = (schema) => {
         let inputData = { ...req.body, ...req.params, ...req.query }
 
         if (req.file || req.files?.length) {
-            inputData.file = { ...req.file, ...req.files }
+            inputData.file = req.file || req.files 
         }
 
         const validationResult = schema.validate(inputData, { abortEarly: false })

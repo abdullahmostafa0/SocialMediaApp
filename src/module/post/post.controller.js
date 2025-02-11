@@ -14,7 +14,7 @@ router.use('/:postId/comment', commentController)
 router.post('/create-public',
     authentication(),
     authorization(endPoint.createPost),
-    uploadCloudFile(fileValidationTypes.image).array('image', 2),
+    uploadCloudFile(fileValidationTypes.image).array('attachments', 2),
     validation(validators.createPost),
     postServices.createPost
 )
@@ -22,7 +22,7 @@ router.post('/create-public',
 router.patch('/update/:postId',
     authentication(),
     authorization(endPoint.createPost),
-    uploadCloudFile(fileValidationTypes.image).array('image', 2),
+    uploadCloudFile(fileValidationTypes.image).array('attachments', 2),
     validation(validators.updatePost),
     postServices.updatePost
 )

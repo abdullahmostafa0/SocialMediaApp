@@ -5,6 +5,7 @@ import { userModel } from "../../../../DB/model/User.model.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { compareHash, generateHash } from "../../../utils/security/hash.security.js";
 import cloud from '../../../utils/multer/cloudinary.js';
+import { postModel } from "../../../../DB/model/Post.model.js";
 
 
 
@@ -212,18 +213,28 @@ export const coverImage = asyncHandler(async (req, res, next) => {
 })
 
 
-export const identity = asyncHandler(async (req, res, next) => {
-    /*
-    const user = await dbService.findByIdAndUpdate({model:userModel,
-                                        id:req.user._id,
-                                        data:{
-                                            coverImages: req.files.image.map(file => file.image.finalPath),
-                                            documents: req.files.document.map(file => file.document.finalPath)
-                                        },
-                                        options:{
-                                            new:true
-                                        }
-    })*/
-    return successResponse({ res, data: { file: req.files } })
+export const adminDashboard = asyncHandler(async (req, res, next) => {
+
+
+    const data = await Promise.allSettled([
+        dbService.findAll({
+            model: userModel,
+            filter: {}
+        }),
+        dbService.findAll({
+            model: postModel,
+            filter: {}
+        })
+    ])
+
+
+    return successResponse({ res, data: { data } })
 })
 
+export const changePrivileges = asyncHandler(async (req, res, next) => {
+
+    const {userId, role} = req.body
+
+
+    return successResponse({ res, data: { data } })
+})
