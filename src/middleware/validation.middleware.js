@@ -5,14 +5,14 @@ const validateObjectId = (value, helper) => {
     return Types.ObjectId.isValid(value) ? true : helper.message("In-valied ObjectId")
 }
 export const fileObject = {
-    "fieldname": "attachments",
-    "originalname": "Screenshot 2024-10-10 023701.png",
-    "encoding": "7bit",
-    "mimetype": "image/png",
-    "destination": "C:\\Users\\DARKEN~1\\AppData\\Local\\Temp",
-    "filename": "56a72def70c6caab653ac54137f38557",
-    "path": "C:\\Users\\DARKEN~1\\AppData\\Local\\Temp\\56a72def70c6caab653ac54137f38557",
-    "size": 33512
+    fieldname: Joi.string(),
+    originalname: Joi.string(),
+    encoding: Joi.string(),
+    mimetype: Joi.string(),
+    destination: Joi.string(),
+    filename: Joi.string(),
+    path: Joi.string(),
+    size: Joi.number()
 }
 export const generalFields = {
     username: Joi.string().min(2).max(25).trim(),
