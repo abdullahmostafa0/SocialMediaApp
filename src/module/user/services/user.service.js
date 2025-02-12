@@ -1,7 +1,7 @@
 import { asyncHandler } from "../../../utils/response/error.response.js";
 import { successResponse } from "../../../utils/response/success.response.js";
 import * as dbService from '../../../../DB/db.service.js'
-import { userModel } from "../../../../DB/model/User.model.js";
+import { roleTypes, userModel } from "../../../../DB/model/User.model.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { compareHash, generateHash } from "../../../utils/security/hash.security.js";
 import cloud from '../../../utils/multer/cloudinary.js';
@@ -233,8 +233,26 @@ export const adminDashboard = asyncHandler(async (req, res, next) => {
 
 export const changePrivileges = asyncHandler(async (req, res, next) => {
 
-    const {userId, role} = req.body
+    const { userId, role } = req.body
 
+    const owner = req.user.role === roleTypes.superAdmin ? {} :
+        { role: { $nin: [roleTypes.admin, roleTypes.superAdmin] } }
 
-    return successResponse({ res, data: { data } })
+    const user = await dbService.findOneAndUpdate({
+        model: userModel,
+        filter: {
+            _id: userId,
+            isDeleted: { $exists: false },
+            ...owner
+        },
+        data: {
+            role,
+            modifiedBy: req.user._id
+        },
+        options: {
+            new: true
+        }
+    })
+
+    return successResponse({ res, data: { user } })
 })

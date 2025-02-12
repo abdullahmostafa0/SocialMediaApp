@@ -1,9 +1,10 @@
 import mongoose, { Schema, Types, model } from "mongoose"
-
-export const privacyTypes ={
-    public:"public",
-    userFriends:"friends",
-    specific:"specific"
+import * as dbService from "../db.service.js"
+import { commentModel } from "./Comment.model.js"
+export const privacyTypes = {
+    public: "public",
+    userFriends: "friends",
+    specific: "specific"
 }
 const postSchema = new Schema({
     content: {
@@ -24,24 +25,48 @@ const postSchema = new Schema({
     deletedBy: { type: Types.ObjectId, ref: "User" },
     isDeleted: Date,
     archive: Boolean,
-    privacy:{
-    type: String,
-    enum: Object.values(privacyTypes),
-    default: privacyTypes.public
+    privacy: {
+        type: String,
+        enum: Object.values(privacyTypes),
+        default: privacyTypes.public
     },
-    userFriends:[String],
-    specific:[String]
+    userFriends: [String],
+    specific: [String]
 },
-{
-    timestamps: true,
-    toObject:{virtuals:true},
-    toJSON:{virtuals:true}
-})
+    {
+        timestamps: true,
+        toObject: { virtuals: true },
+        toJSON: { virtuals: true }
+    })
 
 postSchema.virtual('comments', {
-    localField:"_id",
-    foreignField:"postId",
-    ref:"Comment"
+    localField: "_id",
+    foreignField: "postId",
+    ref: "Comment"
+})
+
+
+//delete comments of the post that deleted
+postSchema.post("findOneAndUpdate", async function (doc, next) {
+    
+    const x = this.getUpdate()
+    const y = this.getFilter()
+
+    if (x.$set.isDeleted) {
+
+        await dbService.updateMany({
+            model: commentModel,
+            filter: {
+                postId: y._id
+            },
+            data: {
+                isDeleted: Date.now(),
+                deletedBy: y.userId
+            }
+        })
+    }
+    
+    
 })
 
 export const postModel = mongoose.models.Post || model("Post", postSchema)

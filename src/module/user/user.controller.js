@@ -44,10 +44,12 @@ router.get('/profile/admin/dashboard',
     authorization(endPoint.admin),
     userService.adminDashboard)
 
-router.get('/profile/admin/change-privileges',
+router.patch('/profile/admin/change-privileges',
     authentication(),
     authorization(endPoint.admin),
     userService.changePrivileges)
+
+
 
 export default router
 
