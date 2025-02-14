@@ -3,7 +3,7 @@ import { emailEvent } from "../../../utils/events/email.event.js"
 import { asyncHandler } from "../../../utils/response/error.response.js"
 import { successResponse } from "../../../utils/response/success.response.js"
 import { compareHash, generateHash } from "../../../utils/security/hash.security.js"
-import { generateToken, verifyToken } from "../../../utils/security/token.security.js"
+import { decodeToken, generateToken, verifyToken } from "../../../utils/security/token.security.js"
 import { OAuth2Client } from 'google-auth-library';
 import * as dbService from '../../../../DB/db.service.js'
 

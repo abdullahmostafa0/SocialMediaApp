@@ -53,7 +53,8 @@ postSchema.post("findOneAndUpdate", async function (doc, next) {
     const y = this.getFilter()
 
     if (x.$set.isDeleted) {
-
+        
+        //make comments of this post soft deleted
         await dbService.updateMany({
             model: commentModel,
             filter: {
@@ -65,7 +66,22 @@ postSchema.post("findOneAndUpdate", async function (doc, next) {
             }
         })
     }
-    
+    //restore comments again when post is restored
+    if(x.$unset?.isDeleted == "")
+    {
+        await dbService.updateMany({
+            model: commentModel,
+            filter: {
+                postId: y._id
+            },
+            data: {
+                $unset: {
+                    isDeleted: "",
+                    deletedBy: ""
+                }
+            }
+        })
+    }
     
 })
 

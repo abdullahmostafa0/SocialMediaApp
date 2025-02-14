@@ -215,6 +215,11 @@ export const undoPost = asyncHandler(async (req, res, next) => {
             userId: req.user._id
         }
     })
+    
+    if (!post) {
+        return next(new Error("in valid post id", { cause: 404 }))
+    }
+
     if (timeNow - (post.isDeleted) >= 120000) {
         return next(new Error("Can't undo now only within two minutes of deletion", { cause: 400 }))
     }

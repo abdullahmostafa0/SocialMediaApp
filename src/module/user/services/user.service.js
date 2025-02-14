@@ -128,10 +128,15 @@ export const replaceEmail = asyncHandler(async (req, res, next) => {
     if (!compareHash({ plainText: newEmailCode, hashValue: req.user.updateEmailOtp })) {
         return next(new Error("the code of the new email is incorrect", { cause: 400 }))
     }
+    const user = await dbService.findOne({
+        model: userModel,
+        filter: {_id: req.user._id }
+    })
+    console.log(user.tempEmail)
     await dbService.updateOne({
         model: userModel, filter: { _id: req.user._id },
         data: {
-            email: req.user.tempEmail,
+            email: user.tempEmail,
             changeCredentialsTime: Date.now(),
             $unset: {
                 tempEmail: 0,

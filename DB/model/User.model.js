@@ -18,6 +18,7 @@ const userSchema = new Schema({
         required: true,
         unique: true
     },
+    tempEmail:String,
     emailOtp: String,
     forgetPasswordOtp: String,
     updateEmailOtp: String,

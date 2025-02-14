@@ -160,7 +160,7 @@ export const unfreezeComment = asyncHandler(async (req, res, next) => {
         filter: {
             _id: commentId,
             postId,
-            isDeleted: { $exists: false },
+            isDeleted: { $exists: true },
             deletedBy: req.user._id
         },
         data: {
