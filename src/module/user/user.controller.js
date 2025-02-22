@@ -49,6 +49,10 @@ router.patch('/profile/admin/change-privileges',
     authorization(endPoint.admin),
     userService.changePrivileges)
 
+router.patch('/add/:userId',
+    authentication(),
+    userService.addFriends)
+
 
 
 export default router

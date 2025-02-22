@@ -26,7 +26,7 @@ export const generalFields = {
     code: Joi.string().pattern(new RegExp(/^[0-9]{1,4}$/)),
     DOB: Joi.date().less("now"),
     fileObject,
-    file:Joi.object(fileObject)
+    file: Joi.object(fileObject)
 }
 
 export const validation = (schema) => {
@@ -34,14 +34,24 @@ export const validation = (schema) => {
         let inputData = { ...req.body, ...req.params, ...req.query }
 
         if (req.file || req.files?.length) {
-            inputData.file = req.file || req.files 
+            inputData.file = req.file || req.files
         }
 
         const validationResult = schema.validate(inputData, { abortEarly: false })
         if (validationResult.error) {
             return res.status(400).json({ message: "validation error", details: validationResult.error.details })
         }
-
         return next()
     }
+}
+
+
+export const validationGraphQL = async ({ schema, data }) => {
+
+    const validationResult = schema.validate(data, { abortEarly: false })
+    if (validationResult.error) {
+        throw new Error(validationResult.error.message, { cause: 400 })
+    }
+
+
 }

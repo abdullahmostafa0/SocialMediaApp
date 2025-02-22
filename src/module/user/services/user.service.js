@@ -13,7 +13,7 @@ export const profile = asyncHandler(async (req, res, next) => {
     const user = await dbService.findOne({
         model: userModel,
         filter: { _id: req.user._id },
-        populate: [{ path: "viewers.userId", select: "username email image" }]
+        populate: [{ path: "friends"}]
     })
 
     return successResponse({ res, data: { user } })
@@ -130,7 +130,7 @@ export const replaceEmail = asyncHandler(async (req, res, next) => {
     }
     const user = await dbService.findOne({
         model: userModel,
-        filter: {_id: req.user._id }
+        filter: { _id: req.user._id }
     })
     console.log(user.tempEmail)
     await dbService.updateOne({
@@ -189,10 +189,10 @@ export const updateImage = asyncHandler(async (req, res, next) => {
             new: true
         }
     })
-    if (user.image?.public_id) {
+    /*if (user.image?.public_id) {
         await cloud.uploader.destroy(user.image.public_id)
-    }
-    return successResponse({ res, data: { file: req.file, user } })
+    }*/
+    return successResponse({ res, data: { user } })
 })
 
 
@@ -259,5 +259,31 @@ export const changePrivileges = asyncHandler(async (req, res, next) => {
         }
     })
 
+    return successResponse({ res, data: { user } })
+})
+
+export const addFriends = asyncHandler(async (req, res, next) => {
+    const { userId } = req.params
+    const user = await dbService.findOneAndUpdate({
+        model: userModel,
+        filter: { _id: userId, isDeleted: false },
+        data: { $addToSet: { friends: req.user._id } },
+        options: {
+            new: true
+        }
+    })
+    if(!user)
+    {
+        return next(new Error('User not found', { cause: 404 }))
+    }
+
+    await dbService.findOneAndUpdate({
+        model: userModel,
+        filter: { _id: req.user._id, isDeleted: false },
+        data: { $addToSet: { friends: userId } },
+        options: {
+            new: true
+        }
+    })
     return successResponse({ res, data: { user } })
 })

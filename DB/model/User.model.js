@@ -69,7 +69,9 @@ const userSchema = new Schema({
         default: false
     },
     blockAccountsList: [String],
-    modifiedBy:{ type: Types.ObjectId, ref: 'User' } 
+    modifiedBy:{ type: Types.ObjectId, ref: 'User' } ,
+    friends :[{ type: Types.ObjectId, ref: 'User' } ]
+
 
 },
     {
@@ -79,3 +81,4 @@ const userSchema = new Schema({
 export const userModel = mongoose.models.User || model("User", userSchema)
 
 
+export const connectionUser = new Map()
